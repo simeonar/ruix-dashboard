@@ -3,6 +3,7 @@ mod data;
 mod history;
 mod ids;
 mod layout_helpers;
+mod nav;
 mod pages;
 mod shell;
 mod sparkline;
