@@ -12,11 +12,7 @@ pub fn build_shell(tree: &mut NodeTree) {
     // ── Root ─────────────────────────────────────────────────────────────────
     {
         let root = tree.get_mut(n(ids::ROOT)).expect("root exists");
-        root.children = vec![
-            n(ids::HEADER),
-            n(ids::BODY),
-            n(ids::STATUS_BAR),
-        ];
+        root.children = vec![n(ids::HEADER), n(ids::BODY), n(ids::STATUS_BAR)];
         root.layout = Some(lb(0.0, 0.0, theme::W, theme::H));
     }
 
@@ -35,7 +31,9 @@ pub fn content_id() -> NodeId {
 
 fn build_header(tree: &mut NodeTree) {
     let mut header = Node::new(n(ids::HEADER), "Rectangle");
-    header.props.insert("fill_color".into(), theme::SURFACE.into());
+    header
+        .props
+        .insert("fill_color".into(), theme::SURFACE.into());
     header.layout = Some(lb(0.0, 0.0, theme::W, theme::HEADER_H));
     header.children = vec![
         n(ids::HEADER_LOGO),
@@ -47,13 +45,16 @@ fn build_header(tree: &mut NodeTree) {
 
     // Logo accent square
     let mut logo = Node::new(n(ids::HEADER_LOGO), "Rectangle");
-    logo.props.insert("fill_color".into(), theme::PRIMARY.into());
+    logo.props
+        .insert("fill_color".into(), theme::PRIMARY.into());
     logo.layout = Some(lb(16.0, 10.0, 28.0, 28.0));
     tree.insert(n(ids::HEADER), logo).expect("insert logo");
 
     // Title
     let mut title = Node::new(n(ids::HEADER_TITLE), "Text");
-    title.props.insert("text".into(), "RUIX System Monitor".into());
+    title
+        .props
+        .insert("text".into(), "RUIX System Monitor".into());
     title.props.insert("fontSize".into(), 18.0.into());
     title.layout = Some(lb(56.0, 14.0, 250.0, 22.0));
     tree.insert(n(ids::HEADER), title).expect("insert title");
@@ -63,7 +64,8 @@ fn build_header(tree: &mut NodeTree) {
     hostname.props.insert("text".into(), "localhost".into());
     hostname.props.insert("fontSize".into(), 12.0.into());
     hostname.layout = Some(lb(theme::W - 260.0, 17.0, 120.0, 16.0));
-    tree.insert(n(ids::HEADER), hostname).expect("insert hostname");
+    tree.insert(n(ids::HEADER), hostname)
+        .expect("insert hostname");
 
     // Clock (right side)
     let mut clock = Node::new(n(ids::HEADER_CLOCK), "Text");
@@ -90,7 +92,9 @@ fn build_body(tree: &mut NodeTree) {
 
 fn build_sidebar(tree: &mut NodeTree, body_y: f32, body_h: f32) {
     let mut sidebar = Node::new(n(ids::SIDEBAR), "Rectangle");
-    sidebar.props.insert("fill_color".into(), theme::SURFACE.into());
+    sidebar
+        .props
+        .insert("fill_color".into(), theme::SURFACE.into());
     sidebar.layout = Some(lb(0.0, body_y, theme::SIDEBAR_W, body_h));
 
     // Collect nav item IDs for children list
@@ -113,7 +117,11 @@ fn build_sidebar(tree: &mut NodeTree, body_y: f32, body_h: f32) {
         let is_active = i == 0; // "Overview" is active
 
         // Background rectangle
-        let bg_color = if is_active { theme::PRIMARY } else { theme::SURFACE_ALT };
+        let bg_color = if is_active {
+            theme::PRIMARY
+        } else {
+            theme::SURFACE_ALT
+        };
         let mut bg = Node::new(n(ids::NAV_ITEM_BASE + i as u64), "Rectangle");
         bg.props.insert("fill_color".into(), bg_color.into());
         bg.layout = Some(lb(8.0, iy, theme::SIDEBAR_W - 16.0, item_h));
@@ -156,19 +164,24 @@ fn build_status_bar(tree: &mut NodeTree) {
     refresh.props.insert("text".into(), "Refresh: 1.0s".into());
     refresh.props.insert("fontSize".into(), 11.0.into());
     refresh.layout = Some(lb(12.0, sy + 5.0, 120.0, 14.0));
-    tree.insert(n(ids::STATUS_BAR), refresh).expect("insert status refresh");
+    tree.insert(n(ids::STATUS_BAR), refresh)
+        .expect("insert status refresh");
 
     // Last update
     let mut last_update = Node::new(n(ids::STATUS_LAST_UPDATE), "Text");
-    last_update.props.insert("text".into(), "Last update: --:--:--".into());
+    last_update
+        .props
+        .insert("text".into(), "Last update: --:--:--".into());
     last_update.props.insert("fontSize".into(), 11.0.into());
     last_update.layout = Some(lb(theme::W / 2.0 - 80.0, sy + 5.0, 180.0, 14.0));
-    tree.insert(n(ids::STATUS_BAR), last_update).expect("insert status update");
+    tree.insert(n(ids::STATUS_BAR), last_update)
+        .expect("insert status update");
 
     // Connected indicator
     let mut connected = Node::new(n(ids::STATUS_CONNECTED), "Text");
     connected.props.insert("text".into(), "Connected".into());
     connected.props.insert("fontSize".into(), 11.0.into());
     connected.layout = Some(lb(theme::W - 120.0, sy + 5.0, 100.0, 14.0));
-    tree.insert(n(ids::STATUS_BAR), connected).expect("insert status connected");
+    tree.insert(n(ids::STATUS_BAR), connected)
+        .expect("insert status connected");
 }

@@ -54,7 +54,9 @@ pub fn build_card(
 
     // ── Top accent bar (3px) ─────────────────────────────────────────────
     let mut accent = Node::new(n(base + ids::CARD_ACCENT_BAR), "Rectangle");
-    accent.props.insert("fill_color".into(), theme::PRIMARY.into());
+    accent
+        .props
+        .insert("fill_color".into(), theme::PRIMARY.into());
     accent.layout = Some(lb(x, y, w, 3.0));
     tree.insert(card_id, accent).expect("insert accent");
 
@@ -83,7 +85,9 @@ pub fn build_card(
     let bar_y = y + 76.0;
     let bar_w = w - 24.0;
     let mut track = Node::new(n(base + ids::CARD_BAR_TRACK), "Rectangle");
-    track.props.insert("fill_color".into(), theme::SURFACE_ALT.into());
+    track
+        .props
+        .insert("fill_color".into(), theme::SURFACE_ALT.into());
     track.layout = Some(lb(x + 12.0, bar_y, bar_w, theme::BAR_H));
     tree.insert(card_id, track).expect("insert bar track");
 
@@ -97,14 +101,16 @@ pub fn build_card(
     // ── Footer left ──────────────────────────────────────────────────────
     let footer_y = y + h - 22.0;
     let mut fl = Node::new(n(base + ids::CARD_FOOTER_LEFT), "Text");
-    fl.props.insert("text".into(), data.footer_left.clone().into());
+    fl.props
+        .insert("text".into(), data.footer_left.clone().into());
     fl.props.insert("fontSize".into(), 11.0.into());
     fl.layout = Some(lb(x + 12.0, footer_y, w / 2.0 - 16.0, 14.0));
     tree.insert(card_id, fl).expect("insert footer left");
 
     // ── Footer right ─────────────────────────────────────────────────────
     let mut fr = Node::new(n(base + ids::CARD_FOOTER_RIGHT), "Text");
-    fr.props.insert("text".into(), data.footer_right.clone().into());
+    fr.props
+        .insert("text".into(), data.footer_right.clone().into());
     fr.props.insert("fontSize".into(), 11.0.into());
     fr.layout = Some(lb(x + w / 2.0, footer_y, w / 2.0 - 12.0, 14.0));
     tree.insert(card_id, fr).expect("insert footer right");
