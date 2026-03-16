@@ -98,6 +98,12 @@ pub fn proc_mem(row: u64) -> u64 {
     PROC_ROW_BASE + row * 4 + 2
 }
 
+// ── Sparklines (9000–9199) ───────────────────────────────────────────────────
+pub const SPARK_CPU_SECTION: u64 = 9000;
+pub const SPARK_CPU_BASE: u64 = 9010; // 60 bars: 9010–9069
+pub const SPARK_MEM_SECTION: u64 = 9100;
+pub const SPARK_MEM_BASE: u64 = 9110; // 60 bars: 9110–9169
+
 // ── Overview page — system info (500–599) ───────────────────────────────────
 pub const SYSINFO_SECTION: u64 = 500;
 pub const SYSINFO_TITLE: u64 = 501;

@@ -10,6 +10,7 @@ use crate::ids::{self, n};
 use crate::layout_helpers::lb;
 use crate::pages;
 use crate::shell;
+use crate::sparkline;
 use crate::theme;
 
 /// Build a complete dashboard snapshot from current metrics.
@@ -127,6 +128,37 @@ pub fn update_in_place(tree: &mut NodeTree, metrics: &SystemMetrics, history: &M
             data::format_uptime(metrics.uptime_seconds),
             metrics.process_count
         ),
+    );
+
+    // ── Sparklines ──────────────────────────────────────────────────────
+    let cx = theme::CONTENT_X;
+    let cy = theme::CONTENT_Y;
+    let cw = theme::CONTENT_W;
+    let spark_y = cy + theme::CARD_PAD + theme::CARD_H + theme::SECTION_GAP;
+    let spark_h = 50.0;
+    let spark_half_w = (cw - theme::CARD_PAD * 2.0 - theme::CARD_GAP) / 2.0;
+
+    sparkline::update_sparkline(
+        tree,
+        ids::SPARK_CPU_SECTION,
+        ids::SPARK_CPU_BASE,
+        &history.cpu_total,
+        cx + theme::CARD_PAD,
+        spark_y,
+        spark_half_w,
+        spark_h,
+        theme::PRIMARY,
+    );
+    sparkline::update_sparkline(
+        tree,
+        ids::SPARK_MEM_SECTION,
+        ids::SPARK_MEM_BASE,
+        &history.mem_percent,
+        cx + theme::CARD_PAD + spark_half_w + theme::CARD_GAP,
+        spark_y,
+        spark_half_w,
+        spark_h,
+        theme::SUCCESS,
     );
 }
 

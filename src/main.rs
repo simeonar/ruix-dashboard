@@ -5,6 +5,7 @@ mod ids;
 mod layout_helpers;
 mod pages;
 mod shell;
+mod sparkline;
 mod theme;
 mod updater;
 

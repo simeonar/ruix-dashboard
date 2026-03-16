@@ -7,6 +7,7 @@ use crate::data::{self, SystemMetrics};
 use crate::history::MetricsHistory;
 use crate::ids::{self, n};
 use crate::layout_helpers::{self, lb, GridArea};
+use crate::sparkline;
 use crate::theme;
 
 /// Build the entire overview page inside the content container.
@@ -22,7 +23,36 @@ pub fn build_overview(
 
     build_metric_cards(tree, content_id, cx, cy, cw, metrics, history);
 
-    let row2_y = cy + theme::CARD_PAD + theme::CARD_H + theme::SECTION_GAP;
+    // ── Sparklines (below cards) ─────────────────────────────────────────
+    let spark_y = cy + theme::CARD_PAD + theme::CARD_H + theme::SECTION_GAP;
+    let spark_h = 50.0;
+    let spark_half_w = (cw - theme::CARD_PAD * 2.0 - theme::CARD_GAP) / 2.0;
+    sparkline::build_sparkline(
+        tree,
+        content_id,
+        ids::SPARK_CPU_SECTION,
+        ids::SPARK_CPU_BASE,
+        &history.cpu_total,
+        cx + theme::CARD_PAD,
+        spark_y,
+        spark_half_w,
+        spark_h,
+        theme::PRIMARY,
+    );
+    sparkline::build_sparkline(
+        tree,
+        content_id,
+        ids::SPARK_MEM_SECTION,
+        ids::SPARK_MEM_BASE,
+        &history.mem_percent,
+        cx + theme::CARD_PAD + spark_half_w + theme::CARD_GAP,
+        spark_y,
+        spark_half_w,
+        spark_h,
+        theme::SUCCESS,
+    );
+
+    let row2_y = spark_y + spark_h + theme::SECTION_GAP;
     let half_w = (cw - theme::CARD_PAD * 2.0 - theme::CARD_GAP) / 2.0;
     build_core_grid(
         tree,
