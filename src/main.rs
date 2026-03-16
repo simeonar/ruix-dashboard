@@ -1,29 +1,35 @@
+#[allow(dead_code)]
+mod ids;
+#[allow(dead_code)]
+mod layout_helpers;
+#[allow(dead_code)]
+mod theme;
+
 use std::collections::HashMap;
 
 use ui_core::core::UiCoreImpl;
 use ui_core::inspector::AssetsMeta;
 use ui_core::prelude::*;
 use ui_core::render::softbuffer::softbuffer_backend;
-use ui_core::types::{LayoutBox, NodeId, Point, Rect, Size};
 
-const W: f32 = 1280.0;
-const H: f32 = 800.0;
+use crate::ids::n;
+use crate::layout_helpers::lb;
 
 fn main() {
-    let mut tree = NodeTree::new(NodeId::new(1));
+    let mut tree = NodeTree::new(n(ids::ROOT));
 
     // Root container
     {
-        let root = tree.get_mut(NodeId::new(1)).expect("root exists");
-        root.children = vec![NodeId::new(2)];
-        root.layout = Some(lb(0.0, 0.0, W, H));
+        let root = tree.get_mut(n(ids::ROOT)).expect("root exists");
+        root.children = vec![n(2)];
+        root.layout = Some(lb(0.0, 0.0, theme::W, theme::H));
     }
 
     // Smoke-test rectangle
-    let mut rect = Node::new(NodeId::new(2), "Rectangle");
-    rect.props.insert("fill_color".into(), "#1E293B".into());
-    rect.layout = Some(lb(40.0, 40.0, W - 80.0, H - 80.0));
-    tree.insert(NodeId::new(1), rect).expect("insert rect");
+    let mut rect = Node::new(n(2), "Rectangle");
+    rect.props.insert("fill_color".into(), theme::SURFACE.into());
+    rect.layout = Some(lb(40.0, 40.0, theme::W - 80.0, theme::H - 80.0));
+    tree.insert(n(ids::ROOT), rect).expect("insert rect");
 
     let snapshot = Snapshot {
         version: 1,
@@ -51,18 +57,9 @@ fn main() {
 
     let _win = core.register_window(
         WindowDescriptor::builder("RUIX System Monitor")
-            .size(W, H)
+            .size(theme::W, theme::H)
             .build(),
     );
 
     core.run().expect("event loop error");
-}
-
-fn lb(x: f32, y: f32, w: f32, h: f32) -> LayoutBox {
-    LayoutBox {
-        origin: Point::new(x, y),
-        size: Size::new(w.max(0.0), h.max(0.0)),
-        clip: Rect::new(x, y, w.max(0.0), h.max(0.0)),
-        z_order: 0,
-    }
 }
