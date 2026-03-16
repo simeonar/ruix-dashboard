@@ -30,6 +30,10 @@ pub struct SystemMetrics {
     // Processes
     pub process_count: usize,
     pub top_cpu_processes: Vec<ProcessMetric>,
+    pub top_mem_processes: Vec<ProcessMetric>,
+
+    // Per-disk
+    pub disks: Vec<DiskMetric>,
 
     // System
     pub hostname: String,
@@ -39,8 +43,17 @@ pub struct SystemMetrics {
 
 pub struct ProcessMetric {
     pub name: String,
+    pub pid: u32,
     pub cpu_percent: f32,
     pub mem_bytes: u64,
+}
+
+/// Per-disk snapshot.
+pub struct DiskMetric {
+    pub name: String,
+    pub mount_point: String,
+    pub total_bytes: u64,
+    pub used_bytes: u64,
 }
 
 /// Sources that need separate refreshing in sysinfo 0.32.
@@ -82,13 +95,23 @@ impl SystemMetrics {
             .first()
             .map_or_else(|| "Unknown".into(), |c| c.brand().to_string());
 
-        // Disk — aggregate all
+        // Disk — aggregate all + per-disk
         let mut disk_total = 0u64;
         let mut disk_used = 0u64;
+        let mut disks_vec = Vec::new();
         for d in src.disks.iter() {
-            disk_total += d.total_space();
-            disk_used += d.total_space().saturating_sub(d.available_space());
+            let total = d.total_space();
+            let used = total.saturating_sub(d.available_space());
+            disk_total += total;
+            disk_used += used;
+            disks_vec.push(DiskMetric {
+                name: d.name().to_string_lossy().into_owned(),
+                mount_point: d.mount_point().to_string_lossy().into_owned(),
+                total_bytes: total,
+                used_bytes: used,
+            });
         }
+        disks_vec.truncate(8);
 
         // Network — aggregate raw totals
         let mut net_rx = 0u64;
@@ -101,9 +124,10 @@ impl SystemMetrics {
         // Top processes by CPU
         let mut procs: Vec<ProcessMetric> = sys
             .processes()
-            .values()
-            .map(|p| ProcessMetric {
+            .iter()
+            .map(|(pid, p)| ProcessMetric {
                 name: p.name().to_string_lossy().into_owned(),
+                pid: pid.as_u32(),
                 cpu_percent: p.cpu_usage(),
                 mem_bytes: p.memory(),
             })
@@ -113,7 +137,21 @@ impl SystemMetrics {
                 .partial_cmp(&a.cpu_percent)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        procs.truncate(10);
+        procs.truncate(20);
+
+        // Top processes by memory (separate list)
+        let mut mem_procs: Vec<ProcessMetric> = sys
+            .processes()
+            .iter()
+            .map(|(pid, p)| ProcessMetric {
+                name: p.name().to_string_lossy().into_owned(),
+                pid: pid.as_u32(),
+                cpu_percent: p.cpu_usage(),
+                mem_bytes: p.memory(),
+            })
+            .collect();
+        mem_procs.sort_by(|a, b| b.mem_bytes.cmp(&a.mem_bytes));
+        mem_procs.truncate(10);
 
         Self {
             timestamp: chrono::Local::now(),
@@ -132,6 +170,8 @@ impl SystemMetrics {
             net_tx_bytes: net_tx,
             process_count: sys.processes().len(),
             top_cpu_processes: procs,
+            top_mem_processes: mem_procs,
+            disks: disks_vec,
             hostname: System::host_name().unwrap_or_else(|| "unknown".into()),
             os_version: format!(
                 "{} {}",
