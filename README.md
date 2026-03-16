@@ -1,12 +1,51 @@
-# RUIX Dashboard
+# RUIX System Monitor Dashboard
 
-Real-time Windows system resources dashboard built on the [RUIX engine](https://github.com/nicearma/ruix-engine).
+Real-time system resources dashboard built on the [RUIX engine](https://github.com/simeonar/ruix-engine). Single portable executable, no installer required.
 
-Monitors CPU, memory, disk, network, and processes with live-updating UI.
+![Status](https://img.shields.io/badge/status-functional-brightgreen)
+![Binary](https://img.shields.io/badge/binary-2.3%20MB-blue)
+![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 
-## Status
+## Features
 
-Early development — concept phase.
+- **6 pages:** Overview, CPU, Memory, Processes, Network, Disks
+- **Live data:** 1-second refresh via `sysinfo` crate
+- **Navigation:** Sidebar click + keyboard shortcuts (1-6)
+- **Sparklines:** CPU and memory 60-second history charts
+- **Portable:** Single static .exe, no external dependencies
+
+## Screenshot
+
+Overview page with metric cards, per-core CPU grid, top processes, sparklines, and system info.
+
+## Building
+
+```bash
+# Debug
+cargo run
+
+# Release (2.3 MB, static CRT, LTO)
+cargo build --release
+
+# Headless CI smoke test
+HEADLESS=1 cargo run
+```
+
+Requires `ui-core` as a sibling directory (`../ui-core`).
+
+## Architecture
+
+- `src/main.rs` — Entry point, event loop, frame hook, nav event handlers
+- `src/data.rs` — `SystemMetrics` collection via `sysinfo`
+- `src/history.rs` — Ring buffer for sparkline data (60 samples)
+- `src/updater.rs` — Tree build/rebuild + per-page in-place updates
+- `src/nav.rs` — Lock-free `NavState` (AtomicU8 + AtomicBool)
+- `src/shell.rs` — Header, sidebar, status bar chrome
+- `src/pages/` — Overview, CPU, Memory, Processes, Network, Disks
+- `src/card.rs` — Reusable metric card builder
+- `src/sparkline.rs` — Bar-chart sparkline renderer
+- `src/theme.rs` — Dark theme colors, thresholds, layout constants
+- `src/ids.rs` — Deterministic NodeId scheme
 
 ## License
 
