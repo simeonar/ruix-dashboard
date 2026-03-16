@@ -11,8 +11,8 @@ const MAX_MEM_PROCS: usize = 10;
 
 /// Build the Memory detail page inside its container.
 pub fn build_memory_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMetrics) {
-    let cx = 0.0;
-    let cy = 0.0;
+    let cx = theme::CONTENT_X;
+    let cy = theme::CONTENT_Y;
     let cw = theme::CONTENT_W;
 
     // ── Section background ────────────────────────────────────────────────
@@ -21,8 +21,7 @@ pub fn build_memory_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &Syste
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     section.layout = Some(lb(cx + 16.0, cy + 16.0, cw - 32.0, 700.0));
-    tree.insert(parent_id, section)
-        .expect("insert mem section");
+    tree.insert(parent_id, section).expect("insert mem section");
 
     let section_id = n(ids::MEM_SECTION);
     let sx = cx + 16.0;
@@ -147,7 +146,9 @@ pub fn build_memory_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &Syste
 
     // ── Details text ──────────────────────────────────────────────────────
     let detail_y = swap_bar_y + 20.0;
-    let avail = metrics.mem_total_bytes.saturating_sub(metrics.mem_used_bytes);
+    let avail = metrics
+        .mem_total_bytes
+        .saturating_sub(metrics.mem_used_bytes);
     let mut detail = Node::new(n(ids::MEM_DETAILS_TEXT), "Text");
     detail.props.insert(
         "text".into(),

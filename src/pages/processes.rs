@@ -11,8 +11,8 @@ const MAX_PROC_ROWS: usize = 20;
 
 /// Build the Processes detail page inside its container.
 pub fn build_processes_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMetrics) {
-    let cx = 0.0;
-    let cy = 0.0;
+    let cx = theme::CONTENT_X;
+    let cy = theme::CONTENT_Y;
     let cw = theme::CONTENT_W;
 
     // ── Section background ────────────────────────────────────────────────

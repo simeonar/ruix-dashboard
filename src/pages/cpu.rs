@@ -11,8 +11,8 @@ const MAX_CORES: usize = 16;
 
 /// Build the CPU detail page inside its container.
 pub fn build_cpu_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMetrics) {
-    let cx = 0.0;
-    let cy = 0.0;
+    let cx = theme::CONTENT_X;
+    let cy = theme::CONTENT_Y;
     let cw = theme::CONTENT_W;
 
     // ── Main section background ───────────────────────────────────────────
@@ -21,8 +21,7 @@ pub fn build_cpu_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMe
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     section.layout = Some(lb(cx + 16.0, cy + 16.0, cw - 32.0, 700.0));
-    tree.insert(parent_id, section)
-        .expect("insert cpu section");
+    tree.insert(parent_id, section).expect("insert cpu section");
 
     let section_id = n(ids::CPU_SECTION_MAIN);
     let sx = cx + 16.0;
@@ -41,9 +40,10 @@ pub fn build_cpu_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMe
 
     // ── Total CPU percentage (large text) ─────────────────────────────────
     let mut total_val = Node::new(n(ids::CPU_TOTAL_VALUE), "Text");
-    total_val
-        .props
-        .insert("text".into(), format!("{:.1}%", metrics.cpu_total_percent).into());
+    total_val.props.insert(
+        "text".into(),
+        format!("{:.1}%", metrics.cpu_total_percent).into(),
+    );
     total_val
         .props
         .insert("color".into(), theme::TEXT_PRIMARY.into());
@@ -99,8 +99,7 @@ pub fn build_cpu_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMe
         .insert("color".into(), theme::TEXT_SECONDARY.into());
     freq.props.insert("fontSize".into(), 12.0.into());
     freq.layout = Some(lb(sx + 16.0, info_y + 18.0, sw - 32.0, 16.0));
-    tree.insert(section_id, freq)
-        .expect("insert cpu freq text");
+    tree.insert(section_id, freq).expect("insert cpu freq text");
 
     // ── Per-core grid (4 columns) ─────────────────────────────────────────
     let grid_y = info_y + 50.0;
@@ -139,9 +138,7 @@ pub fn build_cpu_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMe
 
         let cfill_w = core_bar_w * (pct / 100.0).clamp(0.0, 1.0);
         let mut cfill = Node::new(n(ids::cpu_detail_fill(i as u64)), "Rectangle");
-        cfill
-            .props
-            .insert("fill_color".into(), core_color.into());
+        cfill.props.insert("fill_color".into(), core_color.into());
         cfill.layout = Some(lb(ix + 82.0, iy + 4.0, cfill_w, theme::BAR_H));
         tree.insert(section_id, cfill)
             .expect("insert cpu core fill");

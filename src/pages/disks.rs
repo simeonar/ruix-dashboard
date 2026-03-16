@@ -11,8 +11,8 @@ const MAX_DISKS: usize = 8;
 
 /// Build the Disks detail page inside its container.
 pub fn build_disks_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &SystemMetrics) {
-    let cx = 0.0;
-    let cy = 0.0;
+    let cx = theme::CONTENT_X;
+    let cy = theme::CONTENT_Y;
     let cw = theme::CONTENT_W;
 
     // ── Section background ────────────────────────────────────────────────
@@ -49,13 +49,16 @@ pub fn build_disks_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &System
         let idx = i as u64;
         let disk = metrics.disks.get(i);
 
-        let d_name = disk.map_or_else(|| "-".to_string(), |d| {
-            if d.name.is_empty() {
-                d.mount_point.clone()
-            } else {
-                d.name.clone()
-            }
-        });
+        let d_name = disk.map_or_else(
+            || "-".to_string(),
+            |d| {
+                if d.name.is_empty() {
+                    d.mount_point.clone()
+                } else {
+                    d.name.clone()
+                }
+            },
+        );
         let d_pct = disk.map_or(0.0f32, |d| {
             if d.total_bytes > 0 {
                 (d.used_bytes as f64 / d.total_bytes as f64 * 100.0) as f32
@@ -91,8 +94,7 @@ pub fn build_disks_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &System
         bt.props
             .insert("fill_color".into(), theme::SURFACE_ALT.into());
         bt.layout = Some(lb(sx + 16.0, bary, bar_w, 8.0));
-        tree.insert(section_id, bt)
-            .expect("insert disk bar track");
+        tree.insert(section_id, bt).expect("insert disk bar track");
 
         // Bar fill
         let fill_w = bar_w * (d_pct / 100.0).clamp(0.0, 1.0);

@@ -9,13 +9,9 @@ use crate::layout_helpers::lb;
 use crate::theme;
 
 /// Build the Network detail page inside its container.
-pub fn build_network_page(
-    tree: &mut NodeTree,
-    parent_id: NodeId,
-    history: &MetricsHistory,
-) {
-    let cx = 0.0;
-    let cy = 0.0;
+pub fn build_network_page(tree: &mut NodeTree, parent_id: NodeId, history: &MetricsHistory) {
+    let cx = theme::CONTENT_X;
+    let cy = theme::CONTENT_Y;
     let cw = theme::CONTENT_W;
 
     // ── Section background ────────────────────────────────────────────────
@@ -24,8 +20,7 @@ pub fn build_network_page(
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     section.layout = Some(lb(cx + 16.0, cy + 16.0, cw - 32.0, 300.0));
-    tree.insert(parent_id, section)
-        .expect("insert net section");
+    tree.insert(parent_id, section).expect("insert net section");
 
     let section_id = n(ids::NET_SECTION);
     let sx = cx + 16.0;
@@ -57,9 +52,10 @@ pub fn build_network_page(
         .expect("insert net rx label");
 
     let mut rx_val = Node::new(n(ids::NET_RX_VALUE), "Text");
-    rx_val
-        .props
-        .insert("text".into(), data::format_throughput(history.net_rx_rate).into());
+    rx_val.props.insert(
+        "text".into(),
+        data::format_throughput(history.net_rx_rate).into(),
+    );
     rx_val
         .props
         .insert("color".into(), theme::TEXT_PRIMARY.into());
@@ -80,9 +76,10 @@ pub fn build_network_page(
         .expect("insert net tx label");
 
     let mut tx_val = Node::new(n(ids::NET_TX_VALUE), "Text");
-    tx_val
-        .props
-        .insert("text".into(), data::format_throughput(history.net_tx_rate).into());
+    tx_val.props.insert(
+        "text".into(),
+        data::format_throughput(history.net_tx_rate).into(),
+    );
     tx_val
         .props
         .insert("color".into(), theme::TEXT_PRIMARY.into());

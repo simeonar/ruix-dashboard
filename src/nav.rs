@@ -36,6 +36,12 @@ impl NavState {
         }
     }
 
+    /// Check if the dirty flag is set (peek without clearing).
+    #[must_use]
+    pub fn is_dirty(&self) -> bool {
+        self.dirty.load(Ordering::Relaxed)
+    }
+
     /// Check and clear the dirty flag (returns true once per change).
     pub fn take_dirty(&self) -> bool {
         self.dirty.swap(false, Ordering::Relaxed)

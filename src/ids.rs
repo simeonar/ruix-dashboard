@@ -110,17 +110,6 @@ pub const SYSINFO_TITLE: u64 = 501;
 pub const SYSINFO_LINE1: u64 = 502;
 pub const SYSINFO_LINE2: u64 = 503;
 
-// ── Page containers (one per page, children of CONTENT) ─────────────────────
-/// Each page has a container that gets moved on/off-screen for visibility.
-pub const PAGE_CONTAINER_BASE: u64 = 600;
-// 600 = Overview container, 601 = CPU, 602 = Memory, 603 = Processes,
-// 604 = Network, 605 = Disks
-
-#[must_use]
-pub fn page_container(page_index: u64) -> u64 {
-    PAGE_CONTAINER_BASE + page_index
-}
-
 // ── CPU detail page (1000–1999) ─────────────────────────────────────────────
 pub const CPU_SECTION_MAIN: u64 = 1000;
 pub const CPU_TITLE: u64 = 1001;
@@ -132,11 +121,17 @@ pub const CPU_FREQ_TEXT: u64 = 1006;
 pub const CPU_DETAIL_CORE_BASE: u64 = 1100; // 3 IDs per core: label, track, fill
 
 #[must_use]
-pub fn cpu_detail_label(core: u64) -> u64 { CPU_DETAIL_CORE_BASE + core * 3 }
+pub fn cpu_detail_label(core: u64) -> u64 {
+    CPU_DETAIL_CORE_BASE + core * 3
+}
 #[must_use]
-pub fn cpu_detail_track(core: u64) -> u64 { CPU_DETAIL_CORE_BASE + core * 3 + 1 }
+pub fn cpu_detail_track(core: u64) -> u64 {
+    CPU_DETAIL_CORE_BASE + core * 3 + 1
+}
 #[must_use]
-pub fn cpu_detail_fill(core: u64) -> u64 { CPU_DETAIL_CORE_BASE + core * 3 + 2 }
+pub fn cpu_detail_fill(core: u64) -> u64 {
+    CPU_DETAIL_CORE_BASE + core * 3 + 2
+}
 
 // ── Memory detail page (2000–2999) ──────────────────────────────────────────
 pub const MEM_SECTION: u64 = 2000;
@@ -154,11 +149,17 @@ pub const MEM_TOP_PROCS_TITLE: u64 = 2020;
 pub const MEM_TOP_PROC_BASE: u64 = 2030; // 3 per row: name, mem, pct
 
 #[must_use]
-pub fn mem_proc_name(row: u64) -> u64 { MEM_TOP_PROC_BASE + row * 3 }
+pub fn mem_proc_name(row: u64) -> u64 {
+    MEM_TOP_PROC_BASE + row * 3
+}
 #[must_use]
-pub fn mem_proc_mem(row: u64) -> u64 { MEM_TOP_PROC_BASE + row * 3 + 1 }
+pub fn mem_proc_mem(row: u64) -> u64 {
+    MEM_TOP_PROC_BASE + row * 3 + 1
+}
 #[must_use]
-pub fn mem_proc_pct(row: u64) -> u64 { MEM_TOP_PROC_BASE + row * 3 + 2 }
+pub fn mem_proc_pct(row: u64) -> u64 {
+    MEM_TOP_PROC_BASE + row * 3 + 2
+}
 
 // ── Processes page (3000–3999) ──────────────────────────────────────────────
 pub const PROC_PAGE_SECTION: u64 = 3000;
@@ -167,13 +168,21 @@ pub const PROC_PAGE_HDR: u64 = 3002;
 pub const PROC_PAGE_ROW_BASE: u64 = 3010; // 4 per row: name, cpu, mem, pid
 
 #[must_use]
-pub fn proc_page_name(row: u64) -> u64 { PROC_PAGE_ROW_BASE + row * 4 }
+pub fn proc_page_name(row: u64) -> u64 {
+    PROC_PAGE_ROW_BASE + row * 4
+}
 #[must_use]
-pub fn proc_page_cpu(row: u64) -> u64 { PROC_PAGE_ROW_BASE + row * 4 + 1 }
+pub fn proc_page_cpu(row: u64) -> u64 {
+    PROC_PAGE_ROW_BASE + row * 4 + 1
+}
 #[must_use]
-pub fn proc_page_mem(row: u64) -> u64 { PROC_PAGE_ROW_BASE + row * 4 + 2 }
+pub fn proc_page_mem(row: u64) -> u64 {
+    PROC_PAGE_ROW_BASE + row * 4 + 2
+}
 #[must_use]
-pub fn proc_page_pid(row: u64) -> u64 { PROC_PAGE_ROW_BASE + row * 4 + 3 }
+pub fn proc_page_pid(row: u64) -> u64 {
+    PROC_PAGE_ROW_BASE + row * 4 + 3
+}
 
 // ── Network page (4000–4999) ────────────────────────────────────────────────
 pub const NET_SECTION: u64 = 4000;
@@ -191,12 +200,22 @@ pub const DISK_TITLE: u64 = 5001;
 pub const DISK_ROW_BASE: u64 = 5010; // 5 per disk: name, bar_track, bar_fill, usage, mount
 
 #[must_use]
-pub fn disk_name(idx: u64) -> u64 { DISK_ROW_BASE + idx * 5 }
+pub fn disk_name(idx: u64) -> u64 {
+    DISK_ROW_BASE + idx * 5
+}
 #[must_use]
-pub fn disk_bar_track(idx: u64) -> u64 { DISK_ROW_BASE + idx * 5 + 1 }
+pub fn disk_bar_track(idx: u64) -> u64 {
+    DISK_ROW_BASE + idx * 5 + 1
+}
 #[must_use]
-pub fn disk_bar_fill(idx: u64) -> u64 { DISK_ROW_BASE + idx * 5 + 2 }
+pub fn disk_bar_fill(idx: u64) -> u64 {
+    DISK_ROW_BASE + idx * 5 + 2
+}
 #[must_use]
-pub fn disk_usage_text(idx: u64) -> u64 { DISK_ROW_BASE + idx * 5 + 3 }
+pub fn disk_usage_text(idx: u64) -> u64 {
+    DISK_ROW_BASE + idx * 5 + 3
+}
 #[must_use]
-pub fn disk_mount_text(idx: u64) -> u64 { DISK_ROW_BASE + idx * 5 + 4 }
+pub fn disk_mount_text(idx: u64) -> u64 {
+    DISK_ROW_BASE + idx * 5 + 4
+}
