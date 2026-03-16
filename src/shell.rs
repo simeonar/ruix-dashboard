@@ -12,7 +12,6 @@ pub fn build_shell(tree: &mut NodeTree) {
     // ── Root ─────────────────────────────────────────────────────────────────
     {
         let root = tree.get_mut(n(ids::ROOT)).expect("root exists");
-        root.children = vec![n(ids::HEADER), n(ids::BODY), n(ids::STATUS_BAR)];
         root.layout = Some(lb(0.0, 0.0, theme::W, theme::H));
     }
 
@@ -35,12 +34,6 @@ fn build_header(tree: &mut NodeTree) {
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     header.layout = Some(lb(0.0, 0.0, theme::W, theme::HEADER_H));
-    header.children = vec![
-        n(ids::HEADER_LOGO),
-        n(ids::HEADER_TITLE),
-        n(ids::HEADER_HOSTNAME),
-        n(ids::HEADER_CLOCK),
-    ];
     tree.insert(n(ids::ROOT), header).expect("insert header");
 
     // Logo accent square
@@ -55,6 +48,9 @@ fn build_header(tree: &mut NodeTree) {
     title
         .props
         .insert("text".into(), "RUIX System Monitor".into());
+    title
+        .props
+        .insert("color".into(), theme::TEXT_PRIMARY.into());
     title.props.insert("fontSize".into(), 18.0.into());
     title.layout = Some(lb(56.0, 14.0, 250.0, 22.0));
     tree.insert(n(ids::HEADER), title).expect("insert title");
@@ -62,6 +58,9 @@ fn build_header(tree: &mut NodeTree) {
     // Hostname (right side)
     let mut hostname = Node::new(n(ids::HEADER_HOSTNAME), "Text");
     hostname.props.insert("text".into(), "localhost".into());
+    hostname
+        .props
+        .insert("color".into(), theme::TEXT_SECONDARY.into());
     hostname.props.insert("fontSize".into(), 12.0.into());
     hostname.layout = Some(lb(theme::W - 260.0, 17.0, 120.0, 16.0));
     tree.insert(n(ids::HEADER), hostname)
@@ -70,6 +69,9 @@ fn build_header(tree: &mut NodeTree) {
     // Clock (right side)
     let mut clock = Node::new(n(ids::HEADER_CLOCK), "Text");
     clock.props.insert("text".into(), "00:00:00".into());
+    clock
+        .props
+        .insert("color".into(), theme::TEXT_PRIMARY.into());
     clock.props.insert("fontSize".into(), 14.0.into());
     clock.layout = Some(lb(theme::W - 120.0, 16.0, 100.0, 18.0));
     tree.insert(n(ids::HEADER), clock).expect("insert clock");
@@ -82,7 +84,6 @@ fn build_body(tree: &mut NodeTree) {
     let body_h = theme::CONTENT_H;
 
     let mut body = Node::new(n(ids::BODY), "Container");
-    body.children = vec![n(ids::SIDEBAR), n(ids::CONTENT)];
     body.layout = Some(lb(0.0, body_y, theme::W, body_h));
     tree.insert(n(ids::ROOT), body).expect("insert body");
 
@@ -97,14 +98,7 @@ fn build_sidebar(tree: &mut NodeTree, body_y: f32, body_h: f32) {
         .insert("fill_color".into(), theme::SURFACE.into());
     sidebar.layout = Some(lb(0.0, body_y, theme::SIDEBAR_W, body_h));
 
-    // Collect nav item IDs for children list
     let nav_labels = ["Overview", "CPU", "Memory", "Processes", "Network", "Disks"];
-    let mut children = Vec::new();
-    for i in 0..nav_labels.len() as u64 {
-        children.push(n(ids::NAV_ITEM_BASE + i));
-        children.push(n(ids::NAV_TEXT_BASE + i));
-    }
-    sidebar.children = children;
     tree.insert(n(ids::BODY), sidebar).expect("insert sidebar");
 
     // Nav items
@@ -128,8 +122,14 @@ fn build_sidebar(tree: &mut NodeTree, body_y: f32, body_h: f32) {
         tree.insert(n(ids::SIDEBAR), bg).expect("insert nav bg");
 
         // Text label
+        let text_color = if is_active {
+            theme::TEXT_PRIMARY
+        } else {
+            theme::TEXT_SECONDARY
+        };
         let mut text = Node::new(n(ids::NAV_TEXT_BASE + i as u64), "Text");
         text.props.insert("text".into(), (*label).into());
+        text.props.insert("color".into(), text_color.into());
         text.props.insert("fontSize".into(), 13.0.into());
         text.layout = Some(lb(20.0, iy + 10.0, theme::SIDEBAR_W - 40.0, 16.0));
         tree.insert(n(ids::SIDEBAR), text).expect("insert nav text");
@@ -152,16 +152,14 @@ fn build_status_bar(tree: &mut NodeTree) {
     let mut bar = Node::new(n(ids::STATUS_BAR), "Rectangle");
     bar.props.insert("fill_color".into(), theme::BG.into());
     bar.layout = Some(lb(0.0, sy, theme::W, theme::STATUS_H));
-    bar.children = vec![
-        n(ids::STATUS_REFRESH),
-        n(ids::STATUS_LAST_UPDATE),
-        n(ids::STATUS_CONNECTED),
-    ];
     tree.insert(n(ids::ROOT), bar).expect("insert status bar");
 
     // Refresh rate
     let mut refresh = Node::new(n(ids::STATUS_REFRESH), "Text");
     refresh.props.insert("text".into(), "Refresh: 1.0s".into());
+    refresh
+        .props
+        .insert("color".into(), theme::TEXT_TERTIARY.into());
     refresh.props.insert("fontSize".into(), 11.0.into());
     refresh.layout = Some(lb(12.0, sy + 5.0, 120.0, 14.0));
     tree.insert(n(ids::STATUS_BAR), refresh)
@@ -172,6 +170,9 @@ fn build_status_bar(tree: &mut NodeTree) {
     last_update
         .props
         .insert("text".into(), "Last update: --:--:--".into());
+    last_update
+        .props
+        .insert("color".into(), theme::TEXT_TERTIARY.into());
     last_update.props.insert("fontSize".into(), 11.0.into());
     last_update.layout = Some(lb(theme::W / 2.0 - 80.0, sy + 5.0, 180.0, 14.0));
     tree.insert(n(ids::STATUS_BAR), last_update)
@@ -180,6 +181,9 @@ fn build_status_bar(tree: &mut NodeTree) {
     // Connected indicator
     let mut connected = Node::new(n(ids::STATUS_CONNECTED), "Text");
     connected.props.insert("text".into(), "Connected".into());
+    connected
+        .props
+        .insert("color".into(), theme::TEXT_TERTIARY.into());
     connected.props.insert("fontSize".into(), 11.0.into());
     connected.layout = Some(lb(theme::W - 120.0, sy + 5.0, 100.0, 14.0));
     tree.insert(n(ids::STATUS_BAR), connected)
