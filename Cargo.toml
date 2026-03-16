@@ -13,6 +13,8 @@ sysinfo = "0.32"
 chrono = "0.4"
 
 [profile.release]
+opt-level = "s"
 strip = true
 lto = true
 codegen-units = 1
+panic = "abort"
