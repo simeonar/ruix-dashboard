@@ -18,7 +18,13 @@ Real-time system resources dashboard built on the [RUIX engine](https://github.c
 
 Overview page with metric cards, per-core CPU grid, top processes, sparklines, and system info.
 
-## Building
+## Download
+
+Pre-built Windows x64 binary available on the [Releases](https://github.com/simeonar/ruix-dashboard/releases) page. No installer — just download and run.
+
+## Building from source
+
+> **Note:** Requires the RUIX `ui-core` crate as a sibling directory (`../ui-core`). The engine is not yet published on crates.io.
 
 ```bash
 # Debug
@@ -26,12 +32,7 @@ cargo run
 
 # Release (2.3 MB, static CRT, LTO)
 cargo build --release
-
-# Headless CI smoke test
-HEADLESS=1 cargo run
 ```
-
-Requires `ui-core` as a sibling directory (`../ui-core`).
 
 ## Architecture
 
