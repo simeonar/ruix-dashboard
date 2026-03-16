@@ -1,10 +1,8 @@
-#[allow(dead_code)]
+mod card;
 mod ids;
-#[allow(dead_code)]
 mod layout_helpers;
-#[allow(dead_code)]
+mod pages;
 mod shell;
-#[allow(dead_code)]
 mod theme;
 
 use std::collections::HashMap;
@@ -20,6 +18,7 @@ fn main() {
     let mut tree = NodeTree::new(n(ids::ROOT));
 
     shell::build_shell(&mut tree);
+    pages::overview::build_overview(&mut tree, shell::content_id());
 
     let snapshot = Snapshot {
         version: 1,

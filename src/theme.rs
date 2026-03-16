@@ -1,4 +1,6 @@
 // Color palette and threshold logic for the dark dashboard theme.
+// Some constants are defined ahead of use for upcoming phases.
+#![allow(dead_code)]
 
 // ── Background & Surface ─────────────────────────────────────────────────────
 pub const BG: &str = "#0F172A";
