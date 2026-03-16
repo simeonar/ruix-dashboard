@@ -2,22 +2,21 @@
 use ui_core::prelude::*;
 use ui_core::types::NodeId;
 
+use crate::data::SystemMetrics;
 use crate::ids::{self, n};
 use crate::layout_helpers::lb;
 use crate::theme;
 
 /// Build the dashboard chrome (header, sidebar, content area, status bar).
-/// Populates the tree starting from the root node.
-pub fn build_shell(tree: &mut NodeTree) {
-    // ── Root ─────────────────────────────────────────────────────────────────
+pub fn build_shell(tree: &mut NodeTree, metrics: &SystemMetrics) {
     {
         let root = tree.get_mut(n(ids::ROOT)).expect("root exists");
         root.layout = Some(lb(0.0, 0.0, theme::W, theme::H));
     }
 
-    build_header(tree);
+    build_header(tree, metrics);
     build_body(tree);
-    build_status_bar(tree);
+    build_status_bar(tree, metrics);
 }
 
 /// Returns the NodeId of the content area container.
@@ -28,7 +27,7 @@ pub fn content_id() -> NodeId {
 
 // ── Header ───────────────────────────────────────────────────────────────────
 
-fn build_header(tree: &mut NodeTree) {
+fn build_header(tree: &mut NodeTree, metrics: &SystemMetrics) {
     let mut header = Node::new(n(ids::HEADER), "Rectangle");
     header
         .props
@@ -55,9 +54,11 @@ fn build_header(tree: &mut NodeTree) {
     title.layout = Some(lb(56.0, 14.0, 250.0, 22.0));
     tree.insert(n(ids::HEADER), title).expect("insert title");
 
-    // Hostname (right side)
+    // Hostname
     let mut hostname = Node::new(n(ids::HEADER_HOSTNAME), "Text");
-    hostname.props.insert("text".into(), "localhost".into());
+    hostname
+        .props
+        .insert("text".into(), metrics.hostname.as_str().into());
     hostname
         .props
         .insert("color".into(), theme::TEXT_SECONDARY.into());
@@ -66,9 +67,10 @@ fn build_header(tree: &mut NodeTree) {
     tree.insert(n(ids::HEADER), hostname)
         .expect("insert hostname");
 
-    // Clock (right side)
+    // Clock
+    let time_str = metrics.timestamp.format("%H:%M:%S").to_string();
     let mut clock = Node::new(n(ids::HEADER_CLOCK), "Text");
-    clock.props.insert("text".into(), "00:00:00".into());
+    clock.props.insert("text".into(), time_str.into());
     clock
         .props
         .insert("color".into(), theme::TEXT_PRIMARY.into());
@@ -97,20 +99,17 @@ fn build_sidebar(tree: &mut NodeTree, body_y: f32, body_h: f32) {
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     sidebar.layout = Some(lb(0.0, body_y, theme::SIDEBAR_W, body_h));
-
-    let nav_labels = ["Overview", "CPU", "Memory", "Processes", "Network", "Disks"];
     tree.insert(n(ids::BODY), sidebar).expect("insert sidebar");
 
-    // Nav items
+    let nav_labels = ["Overview", "CPU", "Memory", "Processes", "Network", "Disks"];
     let item_h = 36.0;
     let item_pad = 8.0;
     let start_y = body_y + 12.0;
 
     for (i, label) in nav_labels.iter().enumerate() {
         let iy = start_y + i as f32 * (item_h + item_pad);
-        let is_active = i == 0; // "Overview" is active
+        let is_active = i == 0;
 
-        // Background rectangle
         let bg_color = if is_active {
             theme::PRIMARY
         } else {
@@ -121,7 +120,6 @@ fn build_sidebar(tree: &mut NodeTree, body_y: f32, body_h: f32) {
         bg.layout = Some(lb(8.0, iy, theme::SIDEBAR_W - 16.0, item_h));
         tree.insert(n(ids::SIDEBAR), bg).expect("insert nav bg");
 
-        // Text label
         let text_color = if is_active {
             theme::TEXT_PRIMARY
         } else {
@@ -140,13 +138,12 @@ fn build_content_area(tree: &mut NodeTree, body_y: f32, body_h: f32) {
     let mut content = Node::new(n(ids::CONTENT), "Rectangle");
     content.props.insert("fill_color".into(), theme::BG.into());
     content.layout = Some(lb(theme::SIDEBAR_W, body_y, theme::CONTENT_W, body_h));
-    // Children will be added by page builders
     tree.insert(n(ids::BODY), content).expect("insert content");
 }
 
 // ── Status Bar ───────────────────────────────────────────────────────────────
 
-fn build_status_bar(tree: &mut NodeTree) {
+fn build_status_bar(tree: &mut NodeTree, metrics: &SystemMetrics) {
     let sy = theme::H - theme::STATUS_H;
 
     let mut bar = Node::new(n(ids::STATUS_BAR), "Rectangle");
@@ -154,7 +151,6 @@ fn build_status_bar(tree: &mut NodeTree) {
     bar.layout = Some(lb(0.0, sy, theme::W, theme::STATUS_H));
     tree.insert(n(ids::ROOT), bar).expect("insert status bar");
 
-    // Refresh rate
     let mut refresh = Node::new(n(ids::STATUS_REFRESH), "Text");
     refresh.props.insert("text".into(), "Refresh: 1.0s".into());
     refresh
@@ -165,11 +161,9 @@ fn build_status_bar(tree: &mut NodeTree) {
     tree.insert(n(ids::STATUS_BAR), refresh)
         .expect("insert status refresh");
 
-    // Last update
+    let update_text = format!("Last update: {}", metrics.timestamp.format("%H:%M:%S"));
     let mut last_update = Node::new(n(ids::STATUS_LAST_UPDATE), "Text");
-    last_update
-        .props
-        .insert("text".into(), "Last update: --:--:--".into());
+    last_update.props.insert("text".into(), update_text.into());
     last_update
         .props
         .insert("color".into(), theme::TEXT_TERTIARY.into());
@@ -178,7 +172,6 @@ fn build_status_bar(tree: &mut NodeTree) {
     tree.insert(n(ids::STATUS_BAR), last_update)
         .expect("insert status update");
 
-    // Connected indicator
     let mut connected = Node::new(n(ids::STATUS_CONNECTED), "Text");
     connected.props.insert("text".into(), "Connected".into());
     connected

@@ -3,29 +3,39 @@ use ui_core::prelude::*;
 use ui_core::types::NodeId;
 
 use crate::card::{self, CardData};
+use crate::data::{self, SystemMetrics};
+use crate::history::MetricsHistory;
 use crate::ids::{self, n};
 use crate::layout_helpers::{self, lb, GridArea};
 use crate::theme;
 
 /// Build the entire overview page inside the content container.
-pub fn build_overview(tree: &mut NodeTree, content_id: NodeId) {
+pub fn build_overview(
+    tree: &mut NodeTree,
+    content_id: NodeId,
+    metrics: &SystemMetrics,
+    history: &MetricsHistory,
+) {
     let cx = theme::CONTENT_X;
     let cy = theme::CONTENT_Y;
     let cw = theme::CONTENT_W;
 
-    // ── Metric cards (row 1) ─────────────────────────────────────────────
-    build_metric_cards(tree, content_id, cx, cy, cw);
+    build_metric_cards(tree, content_id, cx, cy, cw, metrics, history);
 
-    // ── Per-core CPU grid (row 2, left half) ─────────────────────────────
     let row2_y = cy + theme::CARD_PAD + theme::CARD_H + theme::SECTION_GAP;
     let half_w = (cw - theme::CARD_PAD * 2.0 - theme::CARD_GAP) / 2.0;
-    build_core_grid(tree, content_id, cx + theme::CARD_PAD, row2_y, half_w);
+    build_core_grid(
+        tree,
+        content_id,
+        cx + theme::CARD_PAD,
+        row2_y,
+        half_w,
+        metrics,
+    );
 
-    // ── Top processes (row 2, right half) ────────────────────────────────
     let proc_x = cx + theme::CARD_PAD + half_w + theme::CARD_GAP;
-    build_top_processes(tree, content_id, proc_x, row2_y, half_w);
+    build_top_processes(tree, content_id, proc_x, row2_y, half_w, metrics);
 
-    // ── System info (row 3) ──────────────────────────────────────────────
     let row3_y = row2_y + 240.0 + theme::SECTION_GAP;
     build_system_info(
         tree,
@@ -33,12 +43,22 @@ pub fn build_overview(tree: &mut NodeTree, content_id: NodeId) {
         cx + theme::CARD_PAD,
         row3_y,
         cw - theme::CARD_PAD * 2.0,
+        metrics,
     );
 }
 
 // ── Metric Cards ─────────────────────────────────────────────────────────────
 
-fn build_metric_cards(tree: &mut NodeTree, content_id: NodeId, cx: f32, cy: f32, cw: f32) {
+#[allow(clippy::too_many_arguments)]
+fn build_metric_cards(
+    tree: &mut NodeTree,
+    content_id: NodeId,
+    cx: f32,
+    cy: f32,
+    cw: f32,
+    metrics: &SystemMetrics,
+    history: &MetricsHistory,
+) {
     let grid = GridArea {
         x: cx,
         y: cy,
@@ -49,64 +69,74 @@ fn build_metric_cards(tree: &mut NodeTree, content_id: NodeId, cx: f32, cy: f32,
         card_h: theme::CARD_H,
     };
 
+    let net_total = history.net_rx_rate + history.net_tx_rate;
+    let net_str = data::format_throughput(net_total);
+
     let cards = [
         CardData {
             label: "CPU",
-            value: "34%".into(),
-            percent: 34.0,
-            footer_left: "8 cores / 16 threads".into(),
-            footer_right: "Peak: 87%".into(),
+            value: format!("{:.0}%", metrics.cpu_total_percent),
+            percent: metrics.cpu_total_percent,
+            footer_left: format!("{} cores", metrics.cpu_core_count),
+            footer_right: format!("{} MHz", metrics.cpu_frequency_mhz),
             color_fn: theme::cpu_color,
         },
         CardData {
             label: "Memory",
-            value: "8.2 GB".into(),
-            percent: 64.0,
-            footer_left: "12.8 GB total".into(),
-            footer_right: "Swap: 1.2 GB".into(),
+            value: data::format_bytes(metrics.mem_used_bytes),
+            percent: metrics.mem_percent(),
+            footer_left: format!("{} total", data::format_bytes(metrics.mem_total_bytes)),
+            footer_right: format!("Swap: {}", data::format_bytes(metrics.swap_used_bytes)),
             color_fn: theme::memory_color,
         },
         CardData {
             label: "Disk",
-            value: "45%".into(),
-            percent: 45.0,
-            footer_left: "238 GB / 512 GB".into(),
-            footer_right: "R: 12 MB/s".into(),
+            value: format!("{:.0}%", metrics.disk_percent()),
+            percent: metrics.disk_percent(),
+            footer_left: format!(
+                "{} / {}",
+                data::format_bytes(metrics.disk_used_bytes),
+                data::format_bytes(metrics.disk_total_bytes)
+            ),
+            footer_right: String::new(),
             color_fn: theme::disk_color,
         },
         CardData {
             label: "Network",
-            value: "1.2 MB/s".into(),
-            percent: 12.0,
-            footer_left: "Ethernet".into(),
-            footer_right: "TX: 0.3 MB/s".into(),
+            value: net_str,
+            percent: (net_total as f32 / 1_048_576.0 * 10.0).min(100.0), // scale for bar
+            footer_left: format!("RX: {}", data::format_throughput(history.net_rx_rate)),
+            footer_right: format!("TX: {}", data::format_throughput(history.net_tx_rate)),
             color_fn: theme::load_color,
         },
     ];
 
-    for (i, data) in cards.iter().enumerate() {
+    for (i, d) in cards.iter().enumerate() {
         let (x, y, w, h) = layout_helpers::card_rect(i, &grid);
-        card::build_card(tree, content_id, i as u64, data, x, y, w, h);
+        card::build_card(tree, content_id, i as u64, d, x, y, w, h);
     }
 }
 
 // ── Per-Core CPU Grid ────────────────────────────────────────────────────────
 
-fn build_core_grid(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f32) {
+fn build_core_grid(
+    tree: &mut NodeTree,
+    content_id: NodeId,
+    x: f32,
+    y: f32,
+    w: f32,
+    metrics: &SystemMetrics,
+) {
     let section_h = 240.0;
 
-    // Section background
     let mut section = Node::new(n(ids::CORE_SECTION), "Rectangle");
     section
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     section.layout = Some(lb(x, y, w, section_h));
-
-    let mock_cores: &[f32] = &[45.0, 78.0, 23.0, 52.0, 67.0, 31.0, 89.0, 15.0];
     tree.insert(content_id, section)
         .expect("insert core section");
 
-    // Title
     let mut title = Node::new(n(ids::CORE_TITLE), "Text");
     title.props.insert("text".into(), "CPU Per-Core".into());
     title
@@ -117,21 +147,22 @@ fn build_core_grid(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f
     tree.insert(n(ids::CORE_SECTION), title)
         .expect("insert core title");
 
-    // Core bars — 2 columns
     let cols = 2;
     let row_h = 24.0;
     let col_w = (w - 24.0) / cols as f32;
     let bar_w = col_w - 80.0;
     let start_y = y + 34.0;
 
-    for (i, &pct) in mock_cores.iter().enumerate() {
+    for (i, &pct) in metrics.cpu_per_core.iter().enumerate() {
+        if i >= 16 {
+            break; // cap at 16 cores for layout
+        }
         let col = i % cols;
         let row = i / cols;
         let ix = x + 12.0 + col as f32 * col_w;
         let iy = start_y + row as f32 * row_h;
         let color = theme::cpu_color(pct);
 
-        // Label: "Core N:"
         let mut label = Node::new(n(ids::core_label(i as u64)), "Text");
         label
             .props
@@ -144,7 +175,6 @@ fn build_core_grid(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f
         tree.insert(n(ids::CORE_SECTION), label)
             .expect("insert core label");
 
-        // Bar track
         let mut track = Node::new(n(ids::core_track(i as u64)), "Rectangle");
         track
             .props
@@ -153,8 +183,7 @@ fn build_core_grid(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f
         tree.insert(n(ids::CORE_SECTION), track)
             .expect("insert core track");
 
-        // Bar fill
-        let fill_w = bar_w * (pct / 100.0);
+        let fill_w = bar_w * (pct / 100.0).clamp(0.0, 1.0);
         let mut fill = Node::new(n(ids::core_fill(i as u64)), "Rectangle");
         fill.props.insert("fill_color".into(), color.into());
         fill.layout = Some(lb(ix + 72.0, iy + 4.0, fill_w, theme::BAR_H));
@@ -165,7 +194,14 @@ fn build_core_grid(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f
 
 // ── Top Processes ────────────────────────────────────────────────────────────
 
-fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f32) {
+fn build_top_processes(
+    tree: &mut NodeTree,
+    content_id: NodeId,
+    x: f32,
+    y: f32,
+    w: f32,
+    metrics: &SystemMetrics,
+) {
     let section_h = 240.0;
 
     let mut section = Node::new(n(ids::PROC_SECTION), "Rectangle");
@@ -173,13 +209,11 @@ fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, 
         .props
         .insert("fill_color".into(), theme::SURFACE.into());
     section.layout = Some(lb(x, y, w, section_h));
-
     tree.insert(content_id, section)
         .expect("insert proc section");
 
     let section_id = n(ids::PROC_SECTION);
 
-    // Title
     let mut title = Node::new(n(ids::PROC_TITLE), "Text");
     title.props.insert("text".into(), "Top Processes".into());
     title
@@ -189,7 +223,6 @@ fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, 
     title.layout = Some(lb(x + 12.0, y + 10.0, w - 24.0, 16.0));
     tree.insert(section_id, title).expect("insert proc title");
 
-    // Header row
     let hdr_y = y + 34.0;
     let mut hdr = Node::new(n(ids::PROC_HEADER_ROW), "Text");
     hdr.props
@@ -200,26 +233,19 @@ fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, 
     hdr.layout = Some(lb(x + 12.0, hdr_y, w - 24.0, 14.0));
     tree.insert(section_id, hdr).expect("insert proc header");
 
-    // Mock process rows
-    let procs = [
-        ("chrome.exe", "12.3%", "340 MB"),
-        ("code.exe", "8.1%", "280 MB"),
-        ("rust-analyzer", "6.4%", "190 MB"),
-        ("explorer.exe", "2.1%", "80 MB"),
-        ("svchost.exe", "1.8%", "65 MB"),
-    ];
-
     let row_h = 22.0;
     let start_y = hdr_y + 20.0;
     let name_w = w * 0.45;
     let cpu_w = w * 0.2;
 
-    for (i, (pname, cpu, mem)) in procs.iter().enumerate() {
+    for (i, proc) in metrics.top_cpu_processes.iter().take(5).enumerate() {
         let ry = start_y + i as f32 * row_h;
         let row = i as u64;
 
         let mut name_node = Node::new(n(ids::proc_name(row)), "Text");
-        name_node.props.insert("text".into(), (*pname).into());
+        name_node
+            .props
+            .insert("text".into(), proc.name.as_str().into());
         name_node
             .props
             .insert("color".into(), theme::TEXT_SECONDARY.into());
@@ -229,7 +255,9 @@ fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, 
             .expect("insert proc name");
 
         let mut cpu_node = Node::new(n(ids::proc_cpu(row)), "Text");
-        cpu_node.props.insert("text".into(), (*cpu).into());
+        cpu_node
+            .props
+            .insert("text".into(), format!("{:.1}%", proc.cpu_percent).into());
         cpu_node
             .props
             .insert("color".into(), theme::TEXT_SECONDARY.into());
@@ -238,7 +266,9 @@ fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, 
         tree.insert(section_id, cpu_node).expect("insert proc cpu");
 
         let mut mem_node = Node::new(n(ids::proc_mem(row)), "Text");
-        mem_node.props.insert("text".into(), (*mem).into());
+        mem_node
+            .props
+            .insert("text".into(), data::format_bytes(proc.mem_bytes).into());
         mem_node
             .props
             .insert("color".into(), theme::TEXT_SECONDARY.into());
@@ -255,7 +285,14 @@ fn build_top_processes(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, 
 
 // ── System Info ──────────────────────────────────────────────────────────────
 
-fn build_system_info(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w: f32) {
+fn build_system_info(
+    tree: &mut NodeTree,
+    content_id: NodeId,
+    x: f32,
+    y: f32,
+    w: f32,
+    metrics: &SystemMetrics,
+) {
     let section_h = 70.0;
 
     let mut section = Node::new(n(ids::SYSINFO_SECTION), "Rectangle");
@@ -280,11 +317,14 @@ fn build_system_info(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w:
     tree.insert(section_id, title)
         .expect("insert sysinfo title");
 
-    let mut line1 = Node::new(n(ids::SYSINFO_LINE1), "Text");
-    line1.props.insert(
-        "text".into(),
-        "OS: Windows 11 23H2  |  CPU: AMD Ryzen 9 7950X  |  RAM: 12.8 GB".into(),
+    let line1_text = format!(
+        "OS: {}  |  CPU: {}  |  RAM: {}",
+        metrics.os_version,
+        metrics.cpu_model,
+        data::format_bytes(metrics.mem_total_bytes)
     );
+    let mut line1 = Node::new(n(ids::SYSINFO_LINE1), "Text");
+    line1.props.insert("text".into(), line1_text.into());
     line1
         .props
         .insert("color".into(), theme::TEXT_SECONDARY.into());
@@ -293,11 +333,13 @@ fn build_system_info(tree: &mut NodeTree, content_id: NodeId, x: f32, y: f32, w:
     tree.insert(section_id, line1)
         .expect("insert sysinfo line1");
 
-    let mut line2 = Node::new(n(ids::SYSINFO_LINE2), "Text");
-    line2.props.insert(
-        "text".into(),
-        "Uptime: 3d 14h 22m  |  Processes: 312  |  Threads: 4218".into(),
+    let line2_text = format!(
+        "Uptime: {}  |  Processes: {}",
+        data::format_uptime(metrics.uptime_seconds),
+        metrics.process_count
     );
+    let mut line2 = Node::new(n(ids::SYSINFO_LINE2), "Text");
+    line2.props.insert("text".into(), line2_text.into());
     line2
         .props
         .insert("color".into(), theme::TEXT_SECONDARY.into());
