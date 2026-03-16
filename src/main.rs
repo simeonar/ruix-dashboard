@@ -81,6 +81,9 @@ fn main() {
     let mut last_refresh = Instant::now();
     let hook_nav = nav_state.clone();
 
+    // Keep a cached snapshot to avoid re-collecting on nav-only changes.
+    let mut cached_metrics = SystemMetrics::collect(&sources);
+
     core.set_frame_hook(Box::new(move |tree: &mut NodeTree| {
         let nav_dirty = hook_nav.is_dirty();
         let data_stale = last_refresh.elapsed() >= refresh_interval;
@@ -91,12 +94,12 @@ fn main() {
 
         if data_stale {
             sources.refresh();
+            cached_metrics = SystemMetrics::collect(&sources);
+            history.push(&cached_metrics);
             last_refresh = Instant::now();
         }
 
-        let metrics = SystemMetrics::collect(&sources);
-        history.push(&metrics);
-        updater::update_in_place(tree, &metrics, &history, &hook_nav);
+        updater::update_in_place(tree, &cached_metrics, &history, &hook_nav);
     }));
 
     let _win = core.register_window(
