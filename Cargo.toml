@@ -1,0 +1,16 @@
+[package]
+name = "ruix-dashboard"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Real-time system resources dashboard built on RUIX engine"
+license = "MIT"
+publish = false
+
+[dependencies]
+ui-core = { path = "../ui-core", features = ["softbuffer-backend"] }
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
