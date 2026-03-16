@@ -3,6 +3,8 @@ mod ids;
 #[allow(dead_code)]
 mod layout_helpers;
 #[allow(dead_code)]
+mod shell;
+#[allow(dead_code)]
 mod theme;
 
 use std::collections::HashMap;
@@ -13,23 +15,11 @@ use ui_core::prelude::*;
 use ui_core::render::softbuffer::softbuffer_backend;
 
 use crate::ids::n;
-use crate::layout_helpers::lb;
 
 fn main() {
     let mut tree = NodeTree::new(n(ids::ROOT));
 
-    // Root container
-    {
-        let root = tree.get_mut(n(ids::ROOT)).expect("root exists");
-        root.children = vec![n(2)];
-        root.layout = Some(lb(0.0, 0.0, theme::W, theme::H));
-    }
-
-    // Smoke-test rectangle
-    let mut rect = Node::new(n(2), "Rectangle");
-    rect.props.insert("fill_color".into(), theme::SURFACE.into());
-    rect.layout = Some(lb(40.0, 40.0, theme::W - 80.0, theme::H - 80.0));
-    tree.insert(n(ids::ROOT), rect).expect("insert rect");
+    shell::build_shell(&mut tree);
 
     let snapshot = Snapshot {
         version: 1,
