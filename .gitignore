@@ -1,0 +1,25 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Documentation — not published yet except README
+*.md
+!README.md
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
