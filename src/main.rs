@@ -70,6 +70,32 @@ fn main() {
         );
     }
 
+    // ── Keyboard navigation (Digit1–6 switch pages) ────────────────────
+    {
+        let state = nav_state.clone();
+        core.event_dispatcher_mut().registry.register_preview(
+            ids::n(ids::ROOT),
+            move |event| {
+                if let InputEvent::KeyDown { key, .. } = event {
+                    let page = match key {
+                        KeyCode::Digit1 => Some(Page::Overview),
+                        KeyCode::Digit2 => Some(Page::Cpu),
+                        KeyCode::Digit3 => Some(Page::Memory),
+                        KeyCode::Digit4 => Some(Page::Processes),
+                        KeyCode::Digit5 => Some(Page::Network),
+                        KeyCode::Digit6 => Some(Page::Disks),
+                        _ => None,
+                    };
+                    if let Some(p) = page {
+                        state.navigate(p);
+                        return EventResult::StopPropagation;
+                    }
+                }
+                EventResult::Propagate
+            },
+        );
+    }
+
     // ── Headless CI mode ─────────────────────────────────────────────────
     if std::env::var("HEADLESS").is_ok() {
         core.tick(Some(100)).expect("headless tick");
