@@ -73,7 +73,7 @@ fn main() {
     // ── Keyboard navigation (Digit1–6 switch pages) ────────────────────
     {
         let state = nav_state.clone();
-        core.event_dispatcher_mut().registry.register_preview(
+        core.event_dispatcher_mut().registry.register_bubble(
             ids::n(ids::ROOT),
             move |event| {
                 if let InputEvent::KeyDown { key, .. } = event {
@@ -159,6 +159,7 @@ fn generate_app_icon() -> WindowIcon {
                 continue;
             }
             // "R" letter: simple pixel pattern in center region
+            #[allow(clippy::manual_range_contains)]
             let is_r = (x >= 8 && x <= 10 && y >= 7 && y <= 24)      // vertical stroke
                 || (x >= 11 && x <= 20 && y >= 7 && y <= 9)           // top horizontal
                 || (x >= 11 && x <= 20 && y >= 14 && y <= 16)         // middle horizontal
