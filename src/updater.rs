@@ -431,11 +431,7 @@ fn update_network(tree: &mut NodeTree, history: &MetricsHistory) {
 fn update_disks(tree: &mut NodeTree, metrics: &SystemMetrics) {
     for (i, disk) in metrics.disks.iter().take(8).enumerate() {
         let idx = i as u64;
-        let d_pct = if disk.total_bytes > 0 {
-            (disk.used_bytes as f64 / disk.total_bytes as f64 * 100.0) as f32
-        } else {
-            0.0
-        };
+        let d_pct = disk.percent();
         let name = if disk.name.is_empty() {
             &disk.mount_point
         } else {

@@ -89,7 +89,10 @@ impl SystemMetrics {
     pub fn collect(src: &DataSources) -> Self {
         let sys = &src.sys;
         let cpus = sys.cpus();
-        let cpu_per_core: Vec<f32> = cpus.iter().map(|c| c.cpu_usage()).collect();
+        let cpu_per_core: Vec<f32> = cpus
+            .iter()
+            .map(|c| sanitize_pct(c.cpu_usage()))
+            .collect();
         let cpu_freq = cpus.first().map_or(0, |c| c.frequency());
         let cpu_model = cpus
             .first()
@@ -155,7 +158,7 @@ impl SystemMetrics {
 
         Self {
             timestamp: chrono::Local::now(),
-            cpu_total_percent: sys.global_cpu_usage(),
+            cpu_total_percent: sanitize_pct(sys.global_cpu_usage()),
             cpu_per_core,
             cpu_frequency_mhz: cpu_freq,
             cpu_model,
@@ -173,11 +176,12 @@ impl SystemMetrics {
             top_mem_processes: mem_procs,
             disks: disks_vec,
             hostname: System::host_name().unwrap_or_else(|| "unknown".into()),
-            os_version: format!(
-                "{} {}",
-                System::name().unwrap_or_default(),
-                System::os_version().unwrap_or_default()
-            ),
+            os_version: {
+                let name = System::name().unwrap_or_default();
+                let ver = System::os_version().unwrap_or_default();
+                let s = format!("{name} {ver}").trim().to_string();
+                if s.is_empty() { "Unknown OS".into() } else { s }
+            },
             uptime_seconds: System::uptime(),
         }
     }
@@ -196,6 +200,25 @@ impl SystemMetrics {
             return 0.0;
         }
         (self.disk_used_bytes as f64 / self.disk_total_bytes as f64 * 100.0) as f32
+    }
+}
+
+// ── Sanitization ────────────────────────────────────────────────────────────
+
+/// Clamp a percentage to [0.0, 100.0], replacing NaN/Inf with 0.
+#[must_use]
+fn sanitize_pct(v: f32) -> f32 {
+    if v.is_finite() { v.clamp(0.0, 100.0) } else { 0.0 }
+}
+
+impl DiskMetric {
+    /// Disk usage as a percentage.
+    #[must_use]
+    pub fn percent(&self) -> f32 {
+        if self.total_bytes == 0 {
+            return 0.0;
+        }
+        (self.used_bytes as f64 / self.total_bytes as f64 * 100.0) as f32
     }
 }
 

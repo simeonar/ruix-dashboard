@@ -59,13 +59,7 @@ pub fn build_disks_page(tree: &mut NodeTree, parent_id: NodeId, metrics: &System
                 }
             },
         );
-        let d_pct = disk.map_or(0.0f32, |d| {
-            if d.total_bytes > 0 {
-                (d.used_bytes as f64 / d.total_bytes as f64 * 100.0) as f32
-            } else {
-                0.0
-            }
-        });
+        let d_pct = disk.map_or(0.0f32, |d| d.percent());
         let d_usage = disk.map_or_else(String::new, |d| {
             format!(
                 "{} / {} ({:.1}%)",
