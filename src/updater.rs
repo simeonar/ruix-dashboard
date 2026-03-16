@@ -140,7 +140,6 @@ pub fn update_in_place(tree: &mut NodeTree, metrics: &SystemMetrics, history: &M
 
     sparkline::update_sparkline(
         tree,
-        ids::SPARK_CPU_SECTION,
         ids::SPARK_CPU_BASE,
         &history.cpu_total,
         cx + theme::CARD_PAD,
@@ -151,7 +150,6 @@ pub fn update_in_place(tree: &mut NodeTree, metrics: &SystemMetrics, history: &M
     );
     sparkline::update_sparkline(
         tree,
-        ids::SPARK_MEM_SECTION,
         ids::SPARK_MEM_BASE,
         &history.mem_percent,
         cx + theme::CARD_PAD + spark_half_w + theme::CARD_GAP,

@@ -23,9 +23,9 @@ pub struct SystemMetrics {
     pub disk_total_bytes: u64,
     pub disk_used_bytes: u64,
 
-    // Network (raw totals — delta computed by history)
-    pub net_rx_total: u64,
-    pub net_tx_total: u64,
+    // Network (bytes since last refresh — already a rate)
+    pub net_rx_bytes: u64,
+    pub net_tx_bytes: u64,
 
     // Processes
     pub process_count: usize,
@@ -128,8 +128,8 @@ impl SystemMetrics {
             swap_used_bytes: sys.used_swap(),
             disk_total_bytes: disk_total,
             disk_used_bytes: disk_used,
-            net_rx_total: net_rx,
-            net_tx_total: net_tx,
+            net_rx_bytes: net_rx,
+            net_tx_bytes: net_tx,
             process_count: sys.processes().len(),
             top_cpu_processes: procs,
             hostname: System::host_name().unwrap_or_else(|| "unknown".into()),
