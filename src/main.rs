@@ -105,8 +105,45 @@ fn main() {
     let _win = core.register_window(
         WindowDescriptor::builder("RUIX System Monitor")
             .size(theme::W, theme::H)
+            .icon(generate_app_icon())
             .build(),
     );
 
     core.run().expect("event loop error");
+}
+
+/// Generate a simple 32x32 RGBA app icon programmatically.
+/// Blue (#3B82F6) rounded square with a white "R" silhouette.
+fn generate_app_icon() -> WindowIcon {
+    const S: u32 = 32;
+    let mut rgba = vec![0u8; (S * S * 4) as usize];
+    let bg = [0x3Bu8, 0x82, 0xF6, 0xFF]; // PRIMARY blue
+    let fg = [0xF8u8, 0xFA, 0xFC, 0xFF]; // TEXT_PRIMARY white
+
+    for y in 0..S {
+        for x in 0..S {
+            let i = ((y * S + x) * 4) as usize;
+            // Rounded corners: skip pixels in 3px corner radius
+            let in_corner = (x < 3 && y < 3 && (x + y) < 3)
+                || (x >= S - 3 && y < 3 && (S - 1 - x + y) < 3)
+                || (x < 3 && y >= S - 3 && (x + S - 1 - y) < 3)
+                || (x >= S - 3 && y >= S - 3 && (S - 1 - x + S - 1 - y) < 3);
+            if in_corner {
+                rgba[i..i + 4].copy_from_slice(&[0, 0, 0, 0]);
+                continue;
+            }
+            // "R" letter: simple pixel pattern in center region
+            let is_r = (x >= 8 && x <= 10 && y >= 7 && y <= 24)      // vertical stroke
+                || (x >= 11 && x <= 20 && y >= 7 && y <= 9)           // top horizontal
+                || (x >= 11 && x <= 20 && y >= 14 && y <= 16)         // middle horizontal
+                || (x >= 21 && x <= 23 && y >= 10 && y <= 13)         // top-right vertical
+                || (x >= 14 && x <= 16 && y >= 17 && y <= 18)         // leg start
+                || (x >= 17 && x <= 19 && y >= 19 && y <= 21)         // leg middle
+                || (x >= 20 && x <= 23 && y >= 22 && y <= 24);        // leg end
+
+            let color = if is_r { &fg } else { &bg };
+            rgba[i..i + 4].copy_from_slice(color);
+        }
+    }
+    WindowIcon { rgba, width: S, height: S }
 }
