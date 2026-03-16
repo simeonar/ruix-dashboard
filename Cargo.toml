@@ -9,6 +9,8 @@ publish = false
 
 [dependencies]
 ui-core = { path = "../ui-core", features = ["softbuffer-backend"] }
+sysinfo = "0.32"
+chrono = "0.4"
 
 [profile.release]
 strip = true
